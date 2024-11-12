@@ -127,7 +127,7 @@ func ExtractInPopplerTsv(pdfBytes []byte) (tsvRows []PopplerTsvRow, err error) {
 			case string:
 				field.SetString(fields[col])
 			default:
-				panic("don't know how to map " + field.Type().String())
+				return nil, fmt.Errorf("don't know how to map " + field.Type().String())
 			}
 		}
 
@@ -144,7 +144,7 @@ func CheckPopplerVersion() (fullVersionString string, err error) {
 	cmd.Stderr = &out
 
 	if err = cmd.Run(); err != nil {
-		panic(fmt.Errorf("error executing binary: %w", err))
+		return "", fmt.Errorf("error executing binary: %w", err)
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(out.Bytes())))
@@ -154,7 +154,7 @@ func CheckPopplerVersion() (fullVersionString string, err error) {
 	fields := strings.Fields(line)
 
 	if len(fields) < 2 {
-		panic("No version information extracted")
+		return "", fmt.Errorf("No version information extracted")
 	}
 
 	fullVersionString = fields[2]
@@ -167,11 +167,11 @@ func CheckPopplerVersion() (fullVersionString string, err error) {
 	const popplerVersionConstraint = ">= 22.05.0"
 
 	if constraint, err = semver.NewConstraint(popplerVersionConstraint); err != nil {
-		panic(fmt.Sprintf("Cannot parse constraint string \"%s\"", popplerVersionConstraint))
+		return "", fmt.Errorf("Cannot parse constraint string \"%s\"", popplerVersionConstraint)
 	}
 
 	if version, err = semver.NewVersion(fullVersionString); err != nil {
-		panic(fmt.Sprintf("Cannot parse version string \"%s\"", fullVersionString))
+		return "", fmt.Errorf("Cannot parse version string \"%s\"", fullVersionString)
 	}
 
 	if constraint.Check(version) {
@@ -179,9 +179,5 @@ func CheckPopplerVersion() (fullVersionString string, err error) {
 		return fullVersionString, nil
 	}
 
-	panic(fmt.Sprintf("Incompatible poppler version: require version \"%s\", but found version \"%s\"", constraint.String(), version.String()))
-}
-
-func init() {
-	CheckPopplerVersion()
+	return "", fmt.Errorf("Incompatible poppler version: require version \"%s\", but found version \"%s\"", constraint.String(), version.String())
 }
