@@ -1,4 +1,4 @@
-module github.com/heussd/pdftotext-go
+module github.com/cpegeric/pdftotext-go
 
 go 1.22
 
